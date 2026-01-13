@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Menu, X, Phone, MapPin, Clock, ShoppingCart, Trash2, Plus, Instagram, Facebook, Utensils, ChevronRight } from 'lucide-react';
+import { Menu, X, Phone, MapPin, Clock, ShoppingCart, Trash2, Plus, Instagram, Facebook, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { burgerData } from './clients/burger';
 import { sushiData } from './clients/sushi';
@@ -15,7 +15,6 @@ const clientsMap = {
   adhdiy: adhdiyData
 };
 
-// SELECIONA O CLIENTE COM BASE NA VARIÁVEL DE AMBIENTE
 const clientKey = import.meta.env.VITE_CLIENT || 'burger';
 const DATA = clientsMap[clientKey];
 
@@ -23,8 +22,10 @@ export default function App() {
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  // Estado para o carrossel de comentários
+  const [activeReview, setActiveReview] = useState(0);
 
-  // --- LÓGICA DO CARRINHO (Mantida para clientes que usam WhatsApp) ---
   const addToCart = (item) => {
     setCart([...cart, item]);
     setIsCartOpen(true);
@@ -33,7 +34,7 @@ export default function App() {
   const total = useMemo(() => cart.reduce((acc, item) => acc + item.price, 0), [cart]);
   
   const handleCheckout = () => {
-    if (!DATA.business.whatsappRaw) return; // Se não tiver zap, não faz nada (usa link externo)
+    if (!DATA.business.whatsappRaw) return;
     let message = `*Order from Website - ${DATA.business.name}*\n\n`;
     cart.forEach(item => message += `• ${item.name} - $${item.price.toFixed(2)}\n`);
     message += `\n*Total: $${total.toFixed(2)}*`;
@@ -41,29 +42,34 @@ export default function App() {
     window.open(url, '_blank');
   };
 
-  // Define se usamos Link Externo (Clover/Reserva) ou Carrinho Interno
   const isExternalOrder = !!DATA.business.orderLink;
+
+  // Funções de navegação do Review
+  const nextReview = () => {
+    setActiveReview((prev) => (prev + 1) % DATA.reviews.length);
+  };
+
+  const prevReview = () => {
+    setActiveReview((prev) => (prev - 1 + DATA.reviews.length) % DATA.reviews.length);
+  };
 
   return (
     <div className={`min-h-screen ${DATA.theme.bgBody} ${DATA.theme.textBody} ${DATA.theme.font || 'font-sans'}`}>
       
-      {/* --- 1. PREMIUM NAVBAR (Estilo Spokes) --- */}
+      {/* NAVBAR */}
       <nav className={`${DATA.theme.navBg || 'bg-white'} sticky top-0 z-50 py-4 shadow-sm border-b border-black/5`}>
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          {/* Logo / Nome */}
           <div className="flex items-center gap-2">
             <h1 className={`text-2xl md:text-3xl font-bold tracking-widest uppercase ${DATA.theme.primaryText}`}>
               {DATA.business.name}
             </h1>
           </div>
 
-          {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8 text-sm font-bold tracking-widest text-gray-600">
             <a href="#menu" className="hover:text-black transition">MENU</a>
-            <a href="#about" className="hover:text-black transition">ABOUT</a>
+            <a href="#reviews" className="hover:text-black transition">REVIEWS</a>
             <a href="#contact" className="hover:text-black transition">LOCATIONS</a>
             
-            {/* Botão de Ação: Carrinho ou Link Externo */}
             {isExternalOrder ? (
               <a href={DATA.business.orderLink} target="_blank" className={`${DATA.theme.primary} text-white px-6 py-2 rounded-full hover:brightness-110 transition`}>
                 ORDER ONLINE
@@ -76,7 +82,6 @@ export default function App() {
             )}
           </div>
 
-          {/* Mobile Toggle */}
           <div className="md:hidden flex items-center gap-4">
             {!isExternalOrder && (
                <button onClick={() => setIsCartOpen(true)} className="relative text-gray-800">
@@ -88,10 +93,10 @@ export default function App() {
           </div>
         </div>
 
-        {/* Mobile Dropdown */}
         {isMenuOpen && (
           <div className="md:hidden bg-white border-t p-4 space-y-4 text-center absolute w-full shadow-xl">
             <a href="#menu" onClick={() => setIsMenuOpen(false)} className="block font-bold">MENU</a>
+            <a href="#reviews" onClick={() => setIsMenuOpen(false)} className="block font-bold">REVIEWS</a>
             <a href="#contact" onClick={() => setIsMenuOpen(false)} className="block">LOCATIONS</a>
             {isExternalOrder && (
               <a href={DATA.business.orderLink} className={`block ${DATA.theme.primary} text-white py-2 rounded-lg font-bold`}>ORDER ONLINE</a>
@@ -100,7 +105,7 @@ export default function App() {
         )}
       </nav>
 
-      {/* --- CARRINHO MODAL (Só aparece se não for link externo) --- */}
+      {/* CARRINHO MODAL */}
       {isCartOpen && !isExternalOrder && (
         <div className="fixed inset-0 z-[60] flex justify-end bg-black/60 backdrop-blur-sm">
            <div className={`w-full max-w-md bg-white h-full shadow-2xl p-6 flex flex-col animate-in slide-in-from-right`}>
@@ -124,7 +129,7 @@ export default function App() {
         </div>
       )}
 
-      {/* --- 2. HERO SECTION (Universal) --- */}
+      {/* HERO SECTION */}
       <section className="relative h-[60vh] md:h-[70vh] flex items-center justify-center text-center px-4">
         <div className="absolute inset-0">
           <img src={DATA.hero.image} alt="Hero" className="w-full h-full object-cover" />
@@ -139,19 +144,15 @@ export default function App() {
         </div>
       </section>
 
-      {/* --- 3. INTRO SECTION (Se existir) --- */}
+      {/* INTRO & FEATURES */}
       {DATA.intro && (
         <section id="about" className="py-20 px-6 bg-white text-center">
           <div className="max-w-3xl mx-auto">
-            <h3 className={`text-2xl md:text-3xl font-bold mb-6 ${DATA.theme.primaryText} uppercase tracking-widest`}>
-              {DATA.intro.heading}
-            </h3>
+            <h3 className={`text-2xl md:text-3xl font-bold mb-6 ${DATA.theme.primaryText} uppercase tracking-widest`}>{DATA.intro.heading}</h3>
             <p className="text-gray-600 text-lg leading-relaxed font-light">{DATA.intro.text}</p>
           </div>
         </section>
       )}
-
-      {/* --- 4. FEATURES GRID (Se existir - O Grande Diferencial Visual) --- */}
       {DATA.features && (
         <section className="py-10 px-6 max-w-7xl mx-auto">
           <div className="grid md:grid-cols-3 gap-12 text-center">
@@ -168,7 +169,7 @@ export default function App() {
         </section>
       )}
 
-      {/* --- 5. MENU SECTION (O Padrão Antigo Integrado) --- */}
+      {/* MENU SECTION */}
       {DATA.menu && (
         <section id="menu" className={`py-20 px-4 ${DATA.theme.bgBody}`}>
           <div className="max-w-6xl mx-auto">
@@ -210,7 +211,58 @@ export default function App() {
         </section>
       )}
 
-      {/* --- 6. EVENTS SECTION (Se existir) --- */}
+      {/* --- SEÇÃO DE REVIEWS (6 ITENS) --- */}
+      {DATA.reviews && (
+        <section id="reviews" className="py-24 px-6 bg-[#5c4d46] text-white">
+          <div className="max-w-4xl mx-auto text-center relative">
+            
+            {/* Estrelas */}
+            <div className="flex justify-center gap-1 mb-8">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} size={24} className={`fill-yellow-400 text-yellow-400 ${i >= DATA.reviews[activeReview].stars ? 'opacity-30' : ''}`} />
+              ))}
+            </div>
+
+            {/* Container do Texto com navegação lateral (setas) */}
+            <div className="flex items-center justify-between gap-4">
+               <button onClick={prevReview} className="hidden md:block p-2 hover:bg-white/10 rounded-full transition"><ChevronLeft size={32}/></button>
+               
+               <div className="min-h-[180px] flex flex-col justify-center flex-1">
+                 <p className="text-xl md:text-2xl font-serif italic leading-relaxed mb-6 opacity-90 animate-in fade-in zoom-in duration-300">
+                   “ {DATA.reviews[activeReview].text} ”
+                 </p>
+               </div>
+
+               <button onClick={nextReview} className="hidden md:block p-2 hover:bg-white/10 rounded-full transition"><ChevronRight size={32}/></button>
+            </div>
+
+            {/* Autor */}
+            <div className="flex flex-col items-center justify-center gap-3 mt-6">
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-yellow-500/50">
+                <img src={DATA.reviews[activeReview].avatar} alt={DATA.reviews[activeReview].author} className="w-full h-full object-cover" />
+              </div>
+              <div>
+                <p className="font-bold text-lg">{DATA.reviews[activeReview].author}</p>
+                <p className="text-xs uppercase tracking-widest opacity-60">{DATA.reviews[activeReview].role}</p>
+              </div>
+            </div>
+
+            {/* Dots de Navegação (Bolinhas) */}
+            <div className="flex justify-center gap-3 mt-12 flex-wrap">
+              {DATA.reviews.map((_, idx) => (
+                <button 
+                  key={idx} 
+                  onClick={() => setActiveReview(idx)}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${idx === activeReview ? 'bg-white scale-125' : 'bg-white/30 hover:bg-white/60'}`}
+                />
+              ))}
+            </div>
+
+          </div>
+        </section>
+      )}
+
+      {/* EVENTS SECTION */}
       {DATA.events && (
         <section className="relative py-32 text-center text-white">
           <div className="absolute inset-0">
@@ -224,13 +276,12 @@ export default function App() {
         </section>
       )}
 
-      {/* --- 7. FOOTER UNIVERSAL (Suporta 1 ou + Endereços) --- */}
+      {/* FOOTER */}
       <footer id="contact" className="bg-stone-900 text-white py-16 px-6">
         <div className="max-w-7xl mx-auto">
           <h4 className="text-3xl font-bold mb-12 uppercase tracking-widest border-b border-gray-800 pb-4 inline-block">VISIT US</h4>
           
           <div className="grid md:grid-cols-3 gap-12 text-sm">
-            {/* Lógica: Se tiver array 'locations', usa ele. Se não, usa o 'business' simples */}
             {DATA.locations ? DATA.locations.map((loc, idx) => (
               <div key={idx} className="space-y-3">
                 <h5 className="text-xl font-bold uppercase text-gray-200">{loc.name}</h5>
@@ -238,7 +289,6 @@ export default function App() {
                 <div className="flex items-start gap-2 text-gray-400"><Clock size={16} className="mt-1 shrink-0" /> <span>{loc.hours}</span></div>
               </div>
             )) : (
-              // Fallback para cliente simples (Burger/Pizza)
               <div className="space-y-3">
                 <h5 className="text-xl font-bold uppercase text-gray-200">Main Location</h5>
                 <div className="flex items-start gap-2 text-gray-400"><MapPin size={16} className="mt-1 shrink-0" /> <span>{DATA.business.address}</span></div>
@@ -247,7 +297,6 @@ export default function App() {
               </div>
             )}
             
-            {/* Coluna Social / Sobre */}
             <div className="md:col-start-3">
                <h5 className="text-xl font-bold uppercase text-gray-200 mb-4">CONNECT</h5>
                <div className="flex gap-4 text-gray-400">
