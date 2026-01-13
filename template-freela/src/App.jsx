@@ -5,12 +5,14 @@ import { burgerData } from './clients/burger';
 import { sushiData } from './clients/sushi';
 import { pizzaData } from './clients/pizza';
 import { jarochoData } from './clients/jarocho';
+import { adhdiyData } from './clients/adhdiy';
 
 const clientsMap = {
   burger: burgerData,
   sushi: sushiData,
   pizza: pizzaData,
-  jarocho: jarochoData
+  jarocho: jarochoData,
+  adhdiy: adhdiyData
 };
 
 // SELECIONA O CLIENTE COM BASE NA VARIÁVEL DE AMBIENTE
