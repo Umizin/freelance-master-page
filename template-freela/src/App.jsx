@@ -4,11 +4,13 @@ import { Menu, X, Phone, MapPin, Clock, ShoppingCart, Trash2, Plus, Instagram, F
 import { burgerData } from './clients/burger';
 import { sushiData } from './clients/sushi';
 import { pizzaData } from './clients/pizza';
+import { jarochoData } from './clients/jarocho';
 
 const clientsMap = {
   burger: burgerData,
   sushi: sushiData,
-  pizza: pizzaData
+  pizza: pizzaData,
+  jarocho: jarochoData
 };
 
 // SELECIONA O CLIENTE COM BASE NA VARIÁVEL DE AMBIENTE
